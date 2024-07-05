@@ -19,13 +19,31 @@ contract Bank {
         deposit();
     }
 
-    function deposit() public payable{
+    function deposit() public payable {
         require(msg.value > 0, "Deposit amount must be greater than 0");
         balances[msg.sender] += msg.value;
         _updateTop3();
     }
 
     function _updateTop3() private {
+        // 如果存款人在 top3 里，直接排序
+        if (
+            msg.sender == top3[0] ||
+            msg.sender == top3[1] ||
+            msg.sender == top3[2]
+        ) {
+            for (uint8 i = 0; i < 3; i++) {
+                for (uint8 j = i + 1; j < 3; j++) {
+                    if (balances[top3[i]] < balances[top3[j]]) {
+                        address temp = top3[i];
+                        top3[i] = top3[j];
+                        top3[j] = temp;
+                    }
+                }
+            }
+            return;
+        }
+        // 如果存款人不在 top3 里，将其替换到 top3 的相应位置
         if (balances[msg.sender] > balances[top3[0]]) {
             top3[2] = top3[1];
             top3[1] = top3[0];
