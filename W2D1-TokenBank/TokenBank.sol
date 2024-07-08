@@ -6,8 +6,8 @@ contract TokenBank {
     BaseERC20 token;
     mapping(address => uint256) public balances;
 
-    event Deposit(address from, uint256 amount);
-    event Withdraw(address to, uint256 amount);
+    event Deposit(address indexed from, uint256 amount);
+    event Withdraw(address indexed to, uint256 amount);
 
     constructor(address tokenAddr) {
         token = BaseERC20(tokenAddr);
