@@ -18,15 +18,9 @@ contract MyToken is ERC20, Ownable {
         _mint(to, amount);
     }
 
-    function isContract(address account) public view returns (bool) {
-        uint256 size;
-        assembly { size := extcodesize(account) }
-        return size > 0;
-    }
-
     function transferWithCallback(address recipient, uint256 amount) external returns (bool) {
         _transfer(msg.sender, recipient, amount);
-        if(isContract(recipient)){
+        if(recipient.code.length > 0){
             bool rv = ITokenRecipient(recipient).tokensReceived(msg.sender, amount);
             require(rv, "No tokensReceived");
         }

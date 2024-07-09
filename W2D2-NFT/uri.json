@@ -1,0 +1,21 @@
+{
+  "name": "My Awesome NFT",
+  "description": "This is a description of my awesome NFT",
+  "image": "ipfs://QmRLxNoHMUngzcTWmtWR2YEDu9jT69aT5YaDxsNtf8M1YP",
+  "external_url": "https://example.com/nft/1",
+  "attributes": [
+    {
+      "trait_type": "Background",
+      "value": "Blue"
+    },
+    {
+      "trait_type": "Eyes",
+      "value": "Green"
+    }
+  ],
+  "properties": {
+    "creator": "0x0123456789abcdef0123456789abcdef01234567",
+    "created_at": "2023-07-09T12:34:56Z",
+    "collection": "My Collection"
+  }
+}
