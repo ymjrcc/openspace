@@ -1,2 +1,4 @@
 .states
 artifacts
+node_modules
+.deps
