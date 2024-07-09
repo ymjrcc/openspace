@@ -72,5 +72,6 @@ contract NFTMarket {
         _nft.transferFrom(address(this), buyer, tokenId);
         emit BuyNFT(buyer, nftAddress, tokenId, nftPrice);
         delete nftList[nftAddress][tokenId];
+        return true;
     }
 }

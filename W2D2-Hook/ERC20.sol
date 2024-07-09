@@ -62,5 +62,6 @@ contract MyToken is ERC20, Ownable {
             );
             require(rv, "No tokensReceived");
         }
+        return true;
     }
 }
