@@ -33,14 +33,14 @@ contract MyToken is ERC20, Ownable {
         address recipient,
         uint256 amount
     ) external returns (bool) {
-        return transferWithCallback(recipient, amount, abi.encode(0));
+        return transferWithCallback(recipient, amount, "");
     }
 
     function transferWithCallback(
       address recipient,
       uint256 amount,
-      bytes calldata data
-    ) external returns (bool) {
+      bytes memory data
+    ) public returns (bool) {
       _transfer(msg.sender, recipient, amount);
       if (recipient.code.length > 0) {
             bool rv = ITokenRecipient(recipient).tokensReceived(

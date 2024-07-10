@@ -68,6 +68,7 @@ contract NFTMarket {
         require(amount == _order.price, unicode"转入 token 要等于 NFT 售价");
         IERC721 _nft = IERC721(nftAddress);
         require(_nft.ownerOf(tokenId) == address(this), unicode"NFT 不在合约中");
+        YMT.transfer(_order.owner, amount);
         _nft.transferFrom(address(this), buyer, tokenId);
         emit BuyNFT(buyer, nftAddress, tokenId, amount);
         delete nftList[nftAddress][tokenId];
