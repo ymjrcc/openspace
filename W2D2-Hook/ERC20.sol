@@ -7,7 +7,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 interface ITokenRecipient {
     function tokensReceived(
         address from,
-        uint256 amount
+        uint256 amount,
+        bytes calldata data
     ) external returns (bool);
 }
 
@@ -22,43 +23,30 @@ interface INFTMarket {
 }
 
 contract MyToken is ERC20, Ownable {
-    constructor() ERC20("MyToken", "MTK") Ownable(msg.sender) {}
+    constructor() ERC20("Yiming Token", "YMT") Ownable(msg.sender) {}
 
     function mint(address to, uint256 amount) public onlyOwner {
         _mint(to, amount);
     }
 
-    // 转入 token 到 TokenBank 实现存款
     function transferWithCallback(
         address recipient,
         uint256 amount
     ) external returns (bool) {
-        _transfer(msg.sender, recipient, amount);
-        if (recipient.code.length > 0) {
-            bool rv = ITokenRecipient(recipient).tokensReceived(
-                msg.sender,
-                amount
-            );
-            require(rv, "No tokensReceived");
-        }
-        return true;
+        return transferWithCallback(recipient, amount, abi.encode(0));
     }
 
-    // 使用ERC20扩展中的回调函数来购买某个 NFT ID
-    function transferAndCallBuyNFT(
-        address nftAddress,
-        uint256 tokenId,
-        uint256 ownerAddress,
-        uint256 nftPrice
+    function transferWithCallback(
+      address recipient,
+      uint256 amount,
+      bytes calldata data
     ) external returns (bool) {
-        _transfer(msg.sender, ownerAddress, nftPrice);
-        if (nftAddress.code.length > 0) {
-            bool rv = INFTMarket(nftAddress).tokensReceived(
+      _transfer(msg.sender, recipient, amount);
+      if (recipient.code.length > 0) {
+            bool rv = ITokenRecipient(recipient).tokensReceived(
                 msg.sender,
-                nftAddress,
-                tokenId,
-                ownerAddress,
-                nftPrice
+                amount,
+                data
             );
             require(rv, "No tokensReceived");
         }
