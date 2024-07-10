@@ -74,23 +74,4 @@ contract NFTMarket {
         delete nftList[nftAddress][tokenId];
         return true;
     }
-
-    // function tokensReceived(
-    //     address buyer,
-    //     address nftAddress,
-    //     uint256 tokenId,
-    //     uint256 ownerAddress,
-    //     uint256 nftPrice
-    // ) external returns (bool) {
-    //     require(msg.sender == address(YMT), unicode"函数调用方不正确");
-    //     Order storage _order = nftList[nftAddress][tokenId];
-    //     require(_order.price > 0, unicode"NFT 价格要大于 0");
-    //     require(nftPrice == _order.price, unicode"转入 token 要等于 NFT 售价");
-    //     IERC721 _nft = IERC721(nftAddress);
-    //     require(_nft.ownerOf(tokenId) == address(this), unicode"NFT 不在合约中");
-    //     _nft.transferFrom(address(this), buyer, tokenId);
-    //     emit BuyNFT(buyer, nftAddress, tokenId, nftPrice);
-    //     delete nftList[nftAddress][tokenId];
-    //     return true;
-    // }
 }
