@@ -6,9 +6,9 @@ import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-contracts/contracts/access/Ownable.sol";
 
 contract YimingToken is ERC20, Ownable {
-    constructor(address initialOwner)
+    constructor()
         ERC20("YimingToken", "YMT")
-        Ownable(initialOwner)
+        Ownable(msg.sender)
     {}
 
     function mint(address to, uint256 amount) public onlyOwner {

@@ -35,6 +35,7 @@ contract NFTMarket {
 
     function list(address _nftAddr, uint256 _tokenId, uint256 _price) public {
         IERC721 _nft = IERC721(_nftAddr);
+        require(_nft.ownerOf(_tokenId) == msg.sender, unicode"不是 NFT 拥有者");
         require(_nft.getApproved(_tokenId) == address(this), unicode"没有授权");
         require(_price > 0, unicode"价格要大于 0");
         Order storage _order = nftList[_nftAddr][_tokenId];
@@ -45,11 +46,12 @@ contract NFTMarket {
     }
 
     function buyNFT(address _nftAddr, uint256 _tokenId) public {
-        Order storage _order = nftList[_nftAddr][_tokenId];
-        require(_order.price > 0, unicode"价格要大于 0");
-        require(YMT.balanceOf(msg.sender) >= _order.price, unicode"钱不够");
         IERC721 _nft = IERC721(_nftAddr);
         require(_nft.ownerOf(_tokenId) == address(this), unicode"nft不在合约中");
+        Order storage _order = nftList[_nftAddr][_tokenId];
+        require(msg.sender != _order.owner, unicode"不能购买自己的 NFT");
+        require(_order.price > 0, unicode"价格要大于 0");
+        require(YMT.balanceOf(msg.sender) >= _order.price, unicode"钱不够");
         _nft.transferFrom(address(this), msg.sender, _tokenId);
         YMT.transferFrom(msg.sender, _order.owner, _order.price);
         emit BuyNFT(msg.sender, _nftAddr, _tokenId, _order.price);
