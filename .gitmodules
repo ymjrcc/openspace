@@ -1,0 +1,3 @@
+[submodule "W2D4-foundry-test/NFTMarket/lib/forge-std"]
+	path = W2D4-foundry-test/NFTMarket/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
