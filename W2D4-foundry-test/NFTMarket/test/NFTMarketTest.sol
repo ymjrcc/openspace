@@ -25,6 +25,8 @@ contract NFTMarketTest is Test {
     YimingToken public yimingToken;
     YimingNFT public yimingNFT;
 
+    NFTMarketHandler public handler;
+
     address nftOwner = address(0x123);
     address nftBuyer = address(0x456);
     address notNftOwner = address(0x789);
@@ -33,6 +35,9 @@ contract NFTMarketTest is Test {
         yimingToken = new YimingToken();
         yimingNFT = new YimingNFT();
         nftMarket = new NFTMarket(address(yimingToken));
+
+        handler = new NFTMarketHandler(nftMarket, yimingNFT, yimingToken, address(this));
+        targetContract(address(handler));
     }
 
     // 辅助函数：铸造并批准 NFT
@@ -147,5 +152,47 @@ contract NFTMarketTest is Test {
     // 不可变测试：测试⽆论如何买卖，NFTMarket合约中都不可能有 Token 持仓
     function invariantToken() public view {
         assertEq(yimingToken.balanceOf(address(nftMarket)), 0);
+    }
+}
+
+contract NFTMarketHandler is Test {
+    NFTMarket public nftMarket;
+    YimingNFT public yimingNFT;
+    YimingToken public yimingToken;
+
+    address nftOwner = address(0x123);
+    address testContractAddr;
+    constructor(NFTMarket nftMarket_, YimingNFT yimingNFT_, YimingToken yimingToken_, address testContract_){
+        nftMarket = nftMarket_;
+        yimingNFT = yimingNFT_;
+        yimingToken = yimingToken_;
+        testContractAddr = testContract_;
+    }
+
+    // 辅助函数：铸造并批准 NFT
+    function mintAndApproveNFT(address to, uint256 tokenId) internal {
+        vm.startPrank(testContractAddr);
+        yimingNFT.safeMint(to, "ipfs://123");
+        vm.stopPrank();
+
+        vm.startPrank(to);
+        yimingNFT.approve(address(nftMarket), tokenId);
+        vm.stopPrank();
+    }
+
+    function testFuzzListAndBuy(address buyer, uint256 price) public {
+        vm.assume(price > 0 && price <= 10000);
+        vm.assume(buyer != address(0) && buyer != nftOwner && buyer != address(nftMarket));
+
+        mintAndApproveNFT(nftOwner, 0);
+        vm.startPrank(nftOwner);
+        nftMarket.list(address(yimingNFT), 0, price);
+        vm.stopPrank();
+
+        deal(address(yimingToken), buyer, 10000);
+        vm.startPrank(buyer);
+        yimingToken.approve(address(nftMarket), 10000);
+        nftMarket.buyNFT(address(yimingNFT), 0);
+        vm.stopPrank();
     }
 }
