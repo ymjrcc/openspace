@@ -35,11 +35,17 @@ contract NFTMarketTest is Test {
         nftMarket = new NFTMarket(address(yimingToken));
     }
 
+    // 辅助函数：铸造并批准 NFT
+    function mintAndApproveNFT(address to, uint256 tokenId) internal {
+        yimingNFT.safeMint(to, "ipfs://123");
+        vm.prank(to);
+        yimingNFT.approve(address(nftMarket), tokenId);
+    }
+
     // 测试上架 NFT 成功和上架事件
     function testListSuccess() public {
-        yimingNFT.safeMint(nftOwner, "ipfs://123");
+        mintAndApproveNFT(nftOwner, 0);
         vm.startPrank(nftOwner);
-        yimingNFT.approve(address(nftMarket), 0);
         vm.expectEmit(true, true, true, true);
         emit List(nftOwner, address(yimingNFT), 0, 100);
         nftMarket.list(address(yimingNFT), 0, 100);
@@ -47,10 +53,8 @@ contract NFTMarketTest is Test {
     }
 
     // 测试上架 NFT 失败：不是 NFT 拥有者
-    function testListFailure1() public {
-        yimingNFT.safeMint(nftOwner, "ipfs://123");
-        vm.prank(nftOwner);
-        yimingNFT.approve(address(nftMarket), 0);
+    function testListFailure_NotOwner() public {
+        mintAndApproveNFT(nftOwner, 0);
         vm.startPrank(notNftOwner);
         vm.expectRevert(unicode"不是 NFT 拥有者");
         nftMarket.list(address(yimingNFT), 0, 100);
@@ -58,7 +62,7 @@ contract NFTMarketTest is Test {
     }
 
     // 测试上架 NFT 失败：没有授权
-    function testListFailure2() public {
+    function testListFailure_NoApproval() public {
         yimingNFT.safeMint(nftOwner, "ipfs://123");
         vm.startPrank(nftOwner);
         vm.expectRevert(unicode"没有授权");
@@ -67,22 +71,24 @@ contract NFTMarketTest is Test {
     }
 
     // 测试上架 NFT 失败：价格要大于 0
-    function testListFailure3() public {
-        yimingNFT.safeMint(nftOwner, "ipfs://123");
+    function testListFailure_PriceZero() public {
+        mintAndApproveNFT(nftOwner, 0);
         vm.startPrank(nftOwner);
-        yimingNFT.approve(address(nftMarket), 0);
         vm.expectRevert(unicode"价格要大于 0");
         nftMarket.list(address(yimingNFT), 0, 0);
         vm.stopPrank();
     }
 
+    // 辅助函数：设置购买前的条件
+    function setUpBuyConditions(uint256 price) internal {
+        mintAndApproveNFT(nftOwner, 0);
+        vm.prank(nftOwner);
+        nftMarket.list(address(yimingNFT), 0, price);
+    }
+
     // 测试购买 NFT 成功和购买事件
     function testBuyNFTSuccess() public {
-        yimingNFT.safeMint(nftOwner, "ipfs://123");
-        vm.startPrank(nftOwner);
-        yimingNFT.approve(address(nftMarket), 0);
-        nftMarket.list(address(yimingNFT), 0, 100);
-        vm.stopPrank();
+        setUpBuyConditions(100);
         yimingToken.mint(nftBuyer, 1000);
         vm.startPrank(nftBuyer);
         yimingToken.approve(address(nftMarket), 100);
@@ -94,11 +100,9 @@ contract NFTMarketTest is Test {
 
     // 测试购买 NFT 失败：自己购买自己的 NFT
     function testBuyNFTFailure1() public {
+        setUpBuyConditions(100);
         yimingToken.mint(nftOwner, 1000);
-        yimingNFT.safeMint(nftOwner, "ipfs://123");
         vm.startPrank(nftOwner);
-        yimingNFT.approve(address(nftMarket), 0);
-        nftMarket.list(address(yimingNFT), 0, 100);
         yimingToken.approve(address(nftMarket), 100);
         vm.expectRevert(unicode"不能购买自己的 NFT");
         nftMarket.buyNFT(address(yimingNFT), 0);
@@ -107,11 +111,7 @@ contract NFTMarketTest is Test {
 
     // 测试购买 NFT 失败：NFT 被重复购买
     function testBuyNFTFailure2() public {
-        yimingNFT.safeMint(nftOwner, "ipfs://123");
-        vm.startPrank(nftOwner);
-        yimingNFT.approve(address(nftMarket), 0);
-        nftMarket.list(address(yimingNFT), 0, 100);
-        vm.stopPrank();
+        setUpBuyConditions(100);
         yimingToken.mint(nftBuyer, 1000);
         vm.startPrank(nftBuyer);
         yimingToken.approve(address(nftMarket), 200);
@@ -123,28 +123,20 @@ contract NFTMarketTest is Test {
 
     // 测试购买 NFT 失败：支付 token 过少
     function testBuyNFTFailure3() public {
-        yimingNFT.safeMint(nftOwner, "ipfs://123");
-        vm.startPrank(nftOwner);
-        yimingNFT.approve(address(nftMarket), 0);
-        nftMarket.list(address(yimingNFT), 0, 100);
-        vm.stopPrank();
+        setUpBuyConditions(100);
         yimingToken.mint(nftBuyer, 50);
         vm.startPrank(nftBuyer);
-        yimingToken.approve(address(nftMarket), 50);
+        yimingToken.approve(address(nftMarket), 100);
         vm.expectRevert(unicode"钱不够");
         nftMarket.buyNFT(address(yimingNFT), 0);
         vm.stopPrank();
     }
 
-    // 模糊测试
+    // 模糊测试：测试随机使⽤ 0.01-10000 Token价格上架NFT，并随机使⽤任意Address购买 NFT
     function testFuzzListAndBuy(address buyer, uint256 price) public {
         vm.assume(price > 0 && price <= 10000);
         vm.assume(buyer != address(0) && buyer != nftOwner);
-        yimingNFT.safeMint(nftOwner, "ipfs://123");
-        vm.startPrank(nftOwner);
-        yimingNFT.approve(address(nftMarket), 0);
-        nftMarket.list(address(yimingNFT), 0, price);
-        vm.stopPrank();
+        setUpBuyConditions(price);
         yimingToken.mint(buyer, 10000);
         vm.startPrank(buyer);
         yimingToken.approve(address(nftMarket), 10000);
