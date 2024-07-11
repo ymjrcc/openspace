@@ -104,7 +104,7 @@ contract NFTMarketTest is Test {
     }
 
     // 测试购买 NFT 失败：自己购买自己的 NFT
-    function testBuyNFTFailure1() public {
+    function testBuyNFTFailure_BuySelf() public {
         setUpBuyConditions(100);
         yimingToken.mint(nftOwner, 1000);
         vm.startPrank(nftOwner);
@@ -115,7 +115,7 @@ contract NFTMarketTest is Test {
     }
 
     // 测试购买 NFT 失败：NFT 被重复购买
-    function testBuyNFTFailure2() public {
+    function testBuyNFTFailure_BuyRepeat() public {
         setUpBuyConditions(100);
         yimingToken.mint(nftBuyer, 1000);
         vm.startPrank(nftBuyer);
@@ -127,7 +127,7 @@ contract NFTMarketTest is Test {
     }
 
     // 测试购买 NFT 失败：支付 token 过少
-    function testBuyNFTFailure3() public {
+    function testBuyNFTFailure_TokenToLess() public {
         setUpBuyConditions(100);
         yimingToken.mint(nftBuyer, 50);
         vm.startPrank(nftBuyer);
