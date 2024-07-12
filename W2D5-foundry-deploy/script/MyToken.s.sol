@@ -11,11 +11,6 @@ contract MyTokenScript is Script {
 
     function run() public {
 
-        // string memory rpcUrl = vm.envString("SEPOLIA_RPC_URL");
-        // uint256 privateKey = vm.envUint("PRIVATE_KEY");
-
-        // vm.startBroadcast(privateKey);
-
         vm.startBroadcast();
 
         myToken = new MyToken("My Token", "MTK");
