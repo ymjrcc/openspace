@@ -54,7 +54,7 @@ export default function Home() {
         {
           owner ? (
             <p>
-              the Owner of token#{tokenId} is <br />
+              the owner of token#{tokenId} is <br />
               {owner}
             </p>
           ) : null
