@@ -10,3 +10,6 @@
 [submodule "W2D5-foundry-deploy/lib/openzeppelin-contracts"]
 	path = W2D5-foundry-deploy/lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "W2D5-foundry-deploy/lib/solenv"]
+	path = W2D5-foundry-deploy/lib/solenv
+	url = https://github.com/memester-xyz/solenv
