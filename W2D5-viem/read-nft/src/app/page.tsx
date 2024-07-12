@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { createPublicClient, http } from 'viem'
 import { mainnet } from 'viem/chains'
 import OrbitABI from '../abi/orbit.json'
@@ -39,7 +39,7 @@ export default function Home() {
       args: [BigInt(tokenId)]
     }).then((res: any) => {
       console.log(String(res));
-      setTokenURI(String(res));
+      setTokenURI(res);
     })
   }
   
