@@ -17,11 +17,11 @@ contract TokenBankTest is Test {
         myToken.mint(Bob, 1e20);
     }
 
-    function testPermitDeposit() public {
-
+    function testPermitDeposit(uint256 value) public {
+        vm.assume(value > 0 && value <= 1e20);
         address owner = Bob;
         address spender = address(tokenBank);
-        uint256 value = 1e18;
+        // uint256 value = 1e18;
         uint256 nonce = myToken.nonces(owner);
         uint256 deadline = block.timestamp + 1 hours;
 
@@ -43,13 +43,14 @@ contract TokenBankTest is Test {
         );
 
         // 使用 Foundry 的 vm 模块签名
+        // 注意：vm.sign 第一个参数是私钥！
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(uint256(keccak256(abi.encodePacked("Bob"))), digest);
 
         // 调用 permitDeposit
         vm.prank(owner);
         tokenBank.permitDeposit(owner, spender, value, deadline, v, r, s);
 
-        // 验证 allowance 是否更新
+        // 验证 balance 是否更新
         assertEq(tokenBank.balances(owner), value);
     }
 }
