@@ -16,3 +16,6 @@
 [submodule "W3D2-Permit/lib/forge-std"]
 	path = W3D2-Permit/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "W3D2-Permit/lib/openzeppelin-contracts"]
+	path = W3D2-Permit/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
