@@ -17,11 +17,10 @@ contract TokenBankTest is Test {
         myToken.mint(Bob, 1e20);
     }
 
-    function testPermitDeposit(uint256 value) public {
-        vm.assume(value > 0 && value <= 1e20);
+    function testPermitDeposit() public {
         address owner = Bob;
         address spender = address(tokenBank);
-        // uint256 value = 1e18;
+        uint256 value = 100;
         uint256 nonce = myToken.nonces(owner);
         uint256 deadline = block.timestamp + 1 hours;
 
@@ -46,11 +45,15 @@ contract TokenBankTest is Test {
         // 注意：vm.sign 第一个参数是私钥！
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(uint256(keccak256(abi.encodePacked("Bob"))), digest);
 
+        assertEq(tokenBank.balances(owner), 0);
+        console.log("Before permitDeposit, the token balance of Bob is 0: ", tokenBank.balances(owner) == 0);
+        
         // 调用 permitDeposit
         vm.prank(owner);
         tokenBank.permitDeposit(owner, spender, value, deadline, v, r, s);
 
         // 验证 balance 是否更新
         assertEq(tokenBank.balances(owner), value);
+        console.log("After permitDeposit, the token balance of Bob is 100: ", tokenBank.balances(owner) == value);
     }
 }
