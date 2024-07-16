@@ -13,3 +13,6 @@
 [submodule "W2D5-foundry-deploy/lib/solenv"]
 	path = W2D5-foundry-deploy/lib/solenv
 	url = https://github.com/memester-xyz/solenv
+[submodule "W3D2-Permit/lib/forge-std"]
+	path = W3D2-Permit/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
