@@ -34,7 +34,7 @@ contract NFTMarketTest is Test {
         vm.stopPrank();
     }
 
-    function testPermitBuyNFT() public {
+    function testPermitBuy() public {
         uint256 tokenId = 0;
         uint256 price = 100;
         vm.startPrank(seller);
@@ -57,6 +57,7 @@ contract NFTMarketTest is Test {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(adminPrivateKey, hash);
 
         assertEq(myNFT.ownerOf(tokenId), address(nftMarket));
+        console.log('Test Permit Buy:');
         console.log("Before permitBuy, NFT's owner: ", myNFT.ownerOf(tokenId));
         
         vm.startPrank(buyer);
@@ -92,6 +93,8 @@ contract NFTMarketTest is Test {
         
         vm.startPrank(somebody);
         myToken.approve(address(nftMarket), price);
+        console.log('Test Permit Buy Fails With Invalid Signature:');
+        console.log('Invalid signature');
         vm.expectRevert("Invalid signature");
         nftMarket.permitBuy(address(myNFT), tokenId, deadline, v, r, s);
         vm.stopPrank();
