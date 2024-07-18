@@ -49,7 +49,7 @@ contract TokenBankTest is Test {
         console.log("Before permitDeposit, the token balance of Bob is 0: ", tokenBank.balances(owner) == 0);
         
         // 调用 permitDeposit
-        vm.prank(owner);
+        vm.prank(spender);
         tokenBank.permitDeposit(owner, spender, value, deadline, v, r, s);
 
         // 验证 balance 是否更新

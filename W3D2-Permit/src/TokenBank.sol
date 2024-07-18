@@ -37,6 +37,13 @@ contract TokenBank {
 
     function permitDeposit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) public {
         token.permit(owner, spender, value, deadline, v, r, s);
-        deposit(value);
+        require(value > 0, "The deposit amount must be greater than 0");
+        require(value <= token.balanceOf(owner), "The deposit amount cannot be higher than the token balance.");
+        (bool success) = token.transferFrom(owner, address(this), value);
+        if (!success) {
+            revert("Failed to deposit");
+        }
+        balances[owner] += value;
+        emit Deposit(owner, value);
     }
 }
