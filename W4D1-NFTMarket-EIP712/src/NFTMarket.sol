@@ -32,7 +32,38 @@ contract  NFTMarket is Ownable(msg.sender), EIP712("OpenSpaceNFTMarket", "1") {
       return listingOrders[id].seller == address(0) ? bytes32(0x00) : id;
     }
 
-    function listing(address nft, uint256 tokenId, address payToken, uint256 price, uint256 deadline) external {
+    bytes32 private constant LIST_TYPEHASH = keccak256("List(address nft,uint256 tokenId,address payToken,uint256 price,uint256 deadline)");
+
+    function _checkList(
+        address nft, 
+        uint256 tokenId, 
+        address payToken, 
+        uint256 price, 
+        uint256 deadline, 
+        bytes calldata signature
+    ) private view {
+        // check listSignature for seller
+        bytes32 structHash = keccak256(abi.encode(
+            LIST_TYPEHASH,
+            nft,
+            tokenId,
+            payToken,
+            price,
+            deadline
+        ));
+        bytes32 listHash = _hashTypedDataV4(structHash);
+        address signer = ECDSA.recover(listHash, signature);
+        require(signer == msg.sender, "NFTMarket: invalid signature");
+    }
+
+    function list(
+        address nft, 
+        uint256 tokenId, 
+        address payToken, 
+        uint256 price, 
+        uint256 deadline, 
+        bytes calldata signature
+    ) external {
         require(deadline > block.timestamp, "NFTMarket: deadline is in the past");
         require(price > 0, "NFTMarket: price is zero");
         require(payToken == ETH_FLAG || IERC20(payToken).totalSupply() > 0, "NFTMarket: payToken is not valid");
@@ -44,6 +75,9 @@ contract  NFTMarket is Ownable(msg.sender), EIP712("OpenSpaceNFTMarket", "1") {
                 || IERC721(nft).isApprovedForAll(msg.sender, address(this)), 
             "NFTMarket: not approved"
         );
+
+        // check listSignature for seller
+        _checkList(nft, tokenId, payToken, price, deadline, signature);
     
         SellOrder memory order = SellOrder({
             seller: msg.sender,
@@ -142,6 +176,10 @@ contract  NFTMarket is Ownable(msg.sender), EIP712("OpenSpaceNFTMarket", "1") {
         feeTo = to;
 
         emit SetFeeTo(to);
+    }
+
+    function DOMAIN_SEPARATOR() public view returns (bytes32) {
+        return _domainSeparatorV4();
     }
 
     event List(
