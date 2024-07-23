@@ -114,4 +114,7 @@ contract IDOTest is Test {
         vm.prank(user1);
         ido.transferOwner(user2);
     }
+
+    // 必须有 receive 函数，否则无法向合约转账，withdraw 会报错
+    receive() external payable {} 
 }
