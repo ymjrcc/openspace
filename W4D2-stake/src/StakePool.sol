@@ -27,7 +27,7 @@ contract StakePool {
         StakeInfo storage info = stakeInfos[account];
         // 如果是第一次 stake，需要初始化 lastUpdateTime
         if (info.lastUpdateTime == 0) {
-            info.lastUpdateTime = uint128(block.timestamp);
+            info.lastUpdateTime = block.timestamp;
             return;
         }
         uint256 duration = block.timestamp - info.lastUpdateTime;
