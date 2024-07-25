@@ -39,10 +39,6 @@ contract StakePool {
         require(amount > 0, "Stake amount must be greater than 0");
         // 需要提前手动 approve 给 StakePool 合约
 
-        if (stakeInfos[msg.sender].lastUpdateTime == 0) {
-            stakeInfos[msg.sender].lastUpdateTime = block.timestamp;
-        }
-
         _updateReward(msg.sender);
         stakeInfos[msg.sender].stakedAmount += amount;
         token.transferFrom(msg.sender, address(this), amount);
