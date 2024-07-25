@@ -50,8 +50,9 @@ contract StakePool {
     }
 
     function stake(uint256 amount, bytes memory signature) public {
+        uint256 deadline = block.timestamp + 1 hours;
         (uint8 v, bytes32 r, bytes32 s) = abi.decode(signature, (uint8, bytes32, bytes32));
-        token.permit(msg.sender, address(this), amount, 1 hours, v, r, s);
+        token.permit(msg.sender, address(this), amount, deadline, v, r, s);
         stake(amount);
     }
 
