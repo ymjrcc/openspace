@@ -43,7 +43,7 @@ contract esRNT is ERC20, Ownable, ERC20Permit {
         }
         uint256 unLockedAmount = lockInfo.amount * time / 30 days;
         RNT.transfer(lockInfo.user, unLockedAmount);
-        RNT.transfer(address(0), lockInfo.amount - unLockedAmount);
+        RNT.burn(lockInfo.amount - unLockedAmount);
         _burn(msg.sender, lockInfo.amount);
     }
 }

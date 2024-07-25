@@ -5,8 +5,9 @@ pragma solidity ^0.8.20;
 import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-contracts/contracts/access/Ownable.sol";
 import "openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Permit.sol";
+import "openzeppelin-contracts/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 
-contract RNT is ERC20, Ownable, ERC20Permit {
+contract RNT is ERC20, Ownable, ERC20Burnable, ERC20Permit {
     constructor()
         ERC20("RNT Token", "RNT")
         Ownable(msg.sender)
