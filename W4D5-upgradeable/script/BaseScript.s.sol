@@ -1,26 +1,24 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+// SPDX-License-Identifier: MIT
+pragma solidity >=0.8.20;
 
-import "forge-std/Script.sol";
-
-
+import { Script } from "forge-std/Script.sol";
 
 abstract contract BaseScript is Script {
+    /// @dev Included to enable compilation of the script without a $MNEMONIC environment variable.
+    string internal constant TEST_MNEMONIC = "test test test test test test test test test test test junk";
+
+    /// @dev Needed for the deterministic deployments.
+    bytes32 internal constant ZERO_SALT = bytes32(0);
+
+    /// @dev The address of the contract deployer.
     address internal deployer;
-    // string internal mnemonic;
 
-    function setUp() public virtual {
-        // mnemonic = vm.envString("MNEMONIC");
-        // (deployer, ) = deriveRememberKey(mnemonic, 0);
-      uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
-      deployer = vm.addr(deployerPrivateKey);
-    }
+    /// @dev Used to derive the deployer's address.
+    string internal mnemonic;
 
-    function saveContract(string memory network, string memory name, address addr) public {
-      string memory json1 = "key";
-      string memory finalJson =  vm.serializeAddress(json1, "address", addr);
-      string memory dirPath = string.concat(string.concat("out/", network), "/");
-      vm.writeJson(finalJson, string.concat(dirPath, string.concat(name, ".json"))); 
+    constructor() {
+        mnemonic = vm.envOr("MNEMONIC", TEST_MNEMONIC);
+        (deployer,) = deriveRememberKey({ mnemonic: mnemonic, index: 0 });
     }
 
     modifier broadcaster() {

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.20;
 
 import "forge-std/Script.sol";
 import { NFTMarket } from "../src/NFTMarket.sol";
@@ -24,7 +24,10 @@ contract NFTMarketScript is Script {
         address proxy = Upgrades.deployTransparentProxy(
             "NFTMarket.sol",
             deployer,
-            abi.encodeCall(NFTMarket.initialize, (100)),
+            abi.encodeCall(
+                NFTMarket.initialize, 
+                address(0x1234567890123456789012345678901234567890)
+            ),
             opts
         );
 
