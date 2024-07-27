@@ -49,3 +49,6 @@
 [submodule "W4D5-upgradeable/lib/openzeppelin-foundry-upgrades"]
 	path = W4D5-upgradeable/lib/openzeppelin-foundry-upgrades
 	url = https://github.com/OpenZeppelin/openzeppelin-foundry-upgrades
+[submodule "W4D5-minimalProxy/lib/forge-std"]
+	path = W4D5-minimalProxy/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
