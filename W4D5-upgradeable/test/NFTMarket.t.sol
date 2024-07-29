@@ -2,12 +2,13 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
-import {NFTMarketV1} from "../src/NFTMarket.sol";
-import {NFTMarketV2} from "../src/NFTMarketV2.sol";
-import "openzeppelin-contracts-upgradeable/contracts/proxy/utils/UUPSUpgradeable.sol";
+import {NFTMarket as NFTMarketV1} from "../src/NFTMarket.sol";
+import {NFTMarket as NFTMarketV2} from "../src/NFTMarketV2.sol";
 import "openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
 import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
+import "openzeppelin-contracts/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import "openzeppelin-contracts/contracts/proxy/transparent/ProxyAdmin.sol";
 
 contract MockERC721 is ERC721 {
     constructor() ERC721("MockNFT", "MNFT") {}
@@ -26,17 +27,24 @@ contract MockERC20 is ERC20 {
 contract NFTMarketTest is Test {
     NFTMarketV1 public marketV1;
     NFTMarketV2 public marketV2;
-    ERC1967Proxy public proxy;
+    // ERC1967Proxy public proxy;
     MockERC721 public mockNFT;
     MockERC20 public mockToken;
     address public owner;
     address public user1;
     address public user2;
 
+    ProxyAdmin public proxyAdmin;
+    ITransparentUpgradeableProxy public proxy;
+    // TransparentUpgradeableProxy public proxy;
+
     function setUp() public {
         owner = address(this);
         user1 = address(0x1);
         user2 = address(0x2);
+
+        // uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        // deployer = vm.addr(deployerPrivateKey);
 
         // Deploy mock contracts
         mockNFT = new MockERC721();
@@ -45,9 +53,25 @@ contract NFTMarketTest is Test {
         // Deploy NFTMarketV1 implementation
         marketV1 = new NFTMarketV1();
 
+        // 读取 .env 中的 PRIVATE_KEY
+        
+        proxyAdmin = new ProxyAdmin(owner);
+        // proxy = new TransparentUpgradeableProxy(
+        //     address(marketV1),
+        //     address(proxyAdmin),
+        //     ""
+        // );
+        proxy = ITransparentUpgradeableProxy(
+            address(new TransparentUpgradeableProxy(
+                address(marketV1),
+                address(proxyAdmin),
+                ""
+            ))
+        );
+
         // Deploy proxy and initialize with V1
-        bytes memory initData = abi.encodeWithSelector(NFTMarketV1.initialize.selector, address(mockToken));
-        proxy = new ERC1967Proxy(address(marketV1), initData);
+        // bytes memory initData = abi.encodeWithSelector(NFTMarketV1.initialize.selector, address(mockToken));
+        // proxy = new ERC1967Proxy(address(marketV1), initData);
 
         // Mint NFT and approve market
         mockNFT.mint(user1, 1);
@@ -75,7 +99,8 @@ contract NFTMarketTest is Test {
 
         // Upgrade to V2
         vm.prank(owner);
-        UUPSUpgradeable(address(proxy)).upgradeToAndCall(address(marketV2), "");
+        proxyAdmin.upgradeAndCall(proxy, address(marketV2), "");
+        // UUPSUpgradeable(address(proxy)).upgradeToAndCall(address(marketV2), "");
 
         NFTMarketV2 proxyAsV2 = NFTMarketV2(address(proxy));
 

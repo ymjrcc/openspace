@@ -83,4 +83,8 @@ contract NFTMarket is Initializable, EIP712("NFTMarket", "1") {
         token.transferFrom(msg.sender, _order.owner, _order.price);
         emit BuyNFT(msg.sender, _nftAddr, _tokenId, _order.price);
     }
+
+    function DOMAIN_SEPARATOR() external view virtual returns (bytes32) {
+        return _domainSeparatorV4();
+    }
 }
