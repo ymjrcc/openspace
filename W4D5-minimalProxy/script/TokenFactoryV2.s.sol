@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.20;
 
 import {Script, console} from "forge-std/Script.sol";
-import { NFTMarket } from "../src/NFTMarketV2.sol";
+import { TokenFactory } from "../src/TokenFactoryV2.sol";
 import { Upgrades, Options } from "openzeppelin-foundry-upgrades/Upgrades.sol";
 
 
-contract NFTMarketScript is Script {
+contract TokenFactoryScript is Script {
 
     address internal deployer;
 
@@ -19,34 +19,23 @@ contract NFTMarketScript is Script {
 
         Options memory opts;
         opts.unsafeSkipAllChecks = true;
-        opts.referenceContract = "NFTMarket.sol";
+        opts.referenceContract = "TokenFactory.sol";
 
         address proxy = vm.envAddress("PROXY_ADDRESS");
 
-        // get codesize of proxy
-        uint256 size;
-        assembly {
-            size := extcodesize(proxy)
-        }
-        if (size == 0) {
-            console.log("Proxy not deployed");
-            return;
-        }
-        console.log(size);
-
         Upgrades.upgradeProxy(
-            proxy, 
-            "NFTMarketV2.sol", 
-            "", 
+            proxy,
+            "TokenFactoryV2.sol",
+            abi.encodeCall(TokenFactory.reinitialize, (2)),
             opts
         );
 
         address implementation = Upgrades.getImplementationAddress(proxy);
         address admin = Upgrades.getAdminAddress(proxy);
 
-        console.log("NFTMarketV2 proxy address: %s", proxy);
-        console.log("NFTMarketV2 imple address: %s", implementation);
-        console.log("NFTMarketV2 admin address: %s", admin);
+        console.log("TokenFactory proxy address: %s", proxy);
+        console.log("TokenFactory imple address: %s", implementation);
+        console.log("TokenFactory admin address: %s", admin);
     }
 
     modifier broadcaster() {

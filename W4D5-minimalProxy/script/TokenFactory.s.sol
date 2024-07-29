@@ -2,11 +2,11 @@
 pragma solidity ^0.8.20;
 
 import {Script, console} from "forge-std/Script.sol";
-import { NFTMarket } from "../src/NFTMarket.sol";
+import { TokenFactory } from "../src/TokenFactory.sol";
 import { Upgrades, Options } from "openzeppelin-foundry-upgrades/Upgrades.sol";
 
 
-contract NFTMarketScript is Script {
+contract TokenFactoryScript is Script {
 
     address internal deployer;
 
@@ -21,21 +21,18 @@ contract NFTMarketScript is Script {
         opts.unsafeSkipAllChecks = true;
 
         address proxy = Upgrades.deployTransparentProxy(
-            "NFTMarket.sol",
+            "TokenFactory.sol",
             deployer,
-            abi.encodeCall(
-                NFTMarket.initialize, 
-                address(0x1234567890123456789012345678901234567890) // MockERC20 address
-            ),
+            abi.encodeCall(TokenFactory.initialize, ()),
             opts
         );
 
         address implementation = Upgrades.getImplementationAddress(proxy);
         address admin = Upgrades.getAdminAddress(proxy);
 
-        console.log("NFTMarket proxy address: %s", proxy);
-        console.log("NFTMarket imple address: %s", implementation);
-        console.log("NFTMarket admin address: %s", admin);
+        console.log("TokenFactory proxy address: %s", proxy);
+        console.log("TokenFactory imple address: %s", implementation);
+        console.log("TokenFactory admin address: %s", admin);
     }
 
     modifier broadcaster() {

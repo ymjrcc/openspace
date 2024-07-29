@@ -5,7 +5,7 @@ import "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.s
 import "openzeppelin-contracts-upgradeable/contracts/proxy/utils/Initializable.sol";
 import "openzeppelin-contracts/contracts/proxy/Clones.sol";
 
-contract TokenFactoryV2 is Initializable, OwnableUpgradeable {
+contract TokenFactory is Initializable, OwnableUpgradeable {
 
     mapping(address => uint) public tokenMintPrices;
     address public implementationAddress;
@@ -15,9 +15,21 @@ contract TokenFactoryV2 is Initializable, OwnableUpgradeable {
         _disableInitializers();
     }
 
+    function initialize() initializer public {
+        __Ownable_init(msg.sender);
+    }
+
+    function reinitialize(uint8 version) reinitializer(version) public {
+        __Ownable_init(msg.sender);
+    }
+
     function initialize(address _implementationAddress) initializer public {
         implementationAddress = _implementationAddress;
         __Ownable_init(msg.sender);
+    }
+
+    function setImplementationAddress(address _implementationAddress) public onlyOwner {
+        implementationAddress = _implementationAddress;
     }
 
     // 该方法用来创建 ERC20 token，（模拟铭文的 deploy）， 
@@ -34,13 +46,13 @@ contract TokenFactoryV2 is Initializable, OwnableUpgradeable {
         address clone = Clones.clone(implementationAddress);
         MyToken(clone).initialize(symbol, totalSupply, perMint, msg.sender);
         clones.push(clone);
-        tokenMintPrices[address(token)] = price;
+        tokenMintPrices[address(clone)] = price;
     }
 
     // 用来发行 ERC20 token，每次调用一次，发行perMint指定的数量。
     function mintInscription(address tokenAddr) public payable{
-        require(bytes(tokens[tokenAddr]).length > 0, "Token not found");
-        require(msg.value >= tokenMintPrices[tokenAddr] * tokens[tokenAddr].PER_MINT(), "Insufficient funds");
+        // require(bytes(tokens[tokenAddr]).length > 0, "Token not found");
+        require(msg.value >= tokenMintPrices[tokenAddr] * MyToken(tokenAddr).PER_MINT(), "Insufficient funds");
         MyToken(tokenAddr).mint(msg.sender);
     }
 

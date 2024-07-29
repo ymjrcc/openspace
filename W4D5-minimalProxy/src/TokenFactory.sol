@@ -28,7 +28,7 @@ contract TokenFactory is Initializable, OwnableUpgradeable {
 
     // 用来发行 ERC20 token，每次调用一次，发行perMint指定的数量。
     function mintInscription(address tokenAddr) public {
-        require(bytes(tokens[tokenAddr]).length > 0, "Token not found");
+        // require(bytes(tokens[tokenAddr]).length > 0, "Token not found");
         MyToken(tokenAddr).mint(msg.sender);
     }
 

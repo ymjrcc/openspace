@@ -29,7 +29,8 @@ contract MyToken is Initializable, ERC20Upgradeable, OwnableUpgradeable {
         __Ownable_init(owner);
     }
 
-    function mint(address to) public {
+    // owner 是 factory 代理合约的地址
+    function mint(address to) public onlyOwner {
         require(totalSupply() + PER_MINT <= TOTAL_SUPPLY, "Total supply exceeded");
         _mint(to, PER_MINT);
     }
