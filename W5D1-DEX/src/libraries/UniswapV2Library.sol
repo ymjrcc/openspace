@@ -5,7 +5,7 @@ import {IUniswapV2Pair as _IUniswapV2Pair} from '../interfaces/IUniswapV2Pair.so
 
 import "./SafeMath.sol";
 
-interface IUniswapV2Pair is _IUniswapV2Pair {
+interface IUniswapV2Pair_ is _IUniswapV2Pair {
     function transferFrom(address from, address to, uint value) external returns (bool);
     function permit(address owner, address spender, uint value, uint deadline, uint8 v, bytes32 r, bytes32 s) external;
 }
@@ -34,7 +34,7 @@ library UniswapV2Library {
     // fetches and sorts the reserves for a pair
     function getReserves(address factory, address tokenA, address tokenB) internal view returns (uint reserveA, uint reserveB) {
         (address token0,) = sortTokens(tokenA, tokenB);
-        (uint reserve0, uint reserve1,) = IUniswapV2Pair(pairFor(factory, tokenA, tokenB)).getReserves();
+        (uint reserve0, uint reserve1,) = IUniswapV2Pair_(pairFor(factory, tokenA, tokenB)).getReserves();
         (reserveA, reserveB) = tokenA == token0 ? (reserve0, reserve1) : (reserve1, reserve0);
     }
 
