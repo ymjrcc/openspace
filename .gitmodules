@@ -64,3 +64,6 @@
 [submodule "W5D1-DEX/lib/forge-std"]
 	path = W5D1-DEX/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "W5D3-NFTMarketWithRewards/lib/forge-std"]
+	path = W5D3-NFTMarketWithRewards/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
