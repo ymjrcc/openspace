@@ -15,16 +15,14 @@ contract NFTMarketWithRewards {
     uint256 public totalStaked;
     // 累积未分配的手续费
     uint256 public accumulatedFees;
-    // 上次更新奖励的时间
-    uint256 public lastUpdateTime;
     // 每单位质押 ETH 的累积未领取奖励
     uint256 public rewardPerETHStored;
     // 每个用户质押 ETH 的数量
     mapping(address => uint256) public userStakeAmount;
-    // 每个用户上次领取奖励时的累积奖励率
-    mapping(address => uint256) public userRewardPerETHPaid;
     // 每个用户待领取的奖励
-    mapping(address => uint256) public userRewardsToClaim;
+    mapping(address => uint256) public userRewardToClaim;
+    // 每个用户上次领取奖励时的 每单位质押 ETH 的累积未领取奖励
+    mapping(address => uint256) public userRewardPerETHPaid;
 
     function list(address _nftAddr, uint256 _tokenId, uint256 _price) public {
         IERC721 _nft = IERC721(_nftAddr);
@@ -47,27 +45,28 @@ contract NFTMarketWithRewards {
         delete nftList[_nftAddr][_tokenId];
         _nft.transferFrom(address(this), msg.sender, _tokenId);
         // 抽取 1% 的手续费
-        uint256 fee = _order.price / 100;
-        _updateReward(address(0));
+        uint256 fee = _order.price * 10 / 1000;
+
         accumulatedFees += fee;
+        if(totalStaked > 0) {
+            rewardPerETHStored = accumulatedFees * 1e18 / totalStaked;
+        }
+
         emit FeesCollected(fee);
-        // 将剩余的 99% 转给卖家
+        // 将剩余的钱转给卖家
         (bool success, ) = payable(_order.owner).call{value: _order.price - fee}("");
         require(success, "Transfer failed");
         emit BuyNFT(msg.sender, _nftAddr, _tokenId, _order.price);
     }
     
     function _updateReward(address account) internal {
+        require(account != address(0), "Invalid account");
         // 更新每单位质押 ETH 的累积未领取奖励
-        rewardPerETHStored += (block.timestamp - lastUpdateTime) * accumulatedFees * 1e18 / totalStaked;
-        // 更新上次更新奖励的时间
-        lastUpdateTime = block.timestamp;
-        // 如果 account 为 0，则表示手续费收入，不需要更新用户的待领取奖励
-        if(account == address(0)) {
-            return;
+        if (totalStaked > 0) {
+            rewardPerETHStored = accumulatedFees * 1e18 / totalStaked;
         }
         // 更新该用户待领取奖励
-        userRewardsToClaim[account] += (userStakeAmount[account] * (rewardPerETHStored - userRewardPerETHPaid[account]) / 1e18);
+        userRewardToClaim[account] += userStakeAmount[account] * (rewardPerETHStored - userRewardPerETHPaid[account]) / 1e18;
         // 更新该用户的累积奖励率
         userRewardPerETHPaid[account] = rewardPerETHStored;
     }
@@ -91,10 +90,9 @@ contract NFTMarketWithRewards {
 
     function claimReward() public {
         _updateReward(msg.sender);
-        uint256 reward = userRewardsToClaim[msg.sender];
+        uint256 reward = userRewardToClaim[msg.sender];
         require(reward > 0, "No rewards to claim");
-        userRewardsToClaim[msg.sender] = 0;
-        accumulatedFees -= reward;
+        userRewardToClaim[msg.sender] = 0;
         (bool success, ) = payable(msg.sender).call{value: reward}("");
         require(success, "Transfer failed");
         emit RewardClaimed(msg.sender, reward);
