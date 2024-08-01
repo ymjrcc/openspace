@@ -13,8 +13,6 @@ contract NFTMarketWithRewards {
     
     // 总的质押 ETH 的数量
     uint256 public totalStaked;
-    // 累积未分配的手续费
-    uint256 public accumulatedFees;
     // 每单位质押 ETH 的累积未领取奖励
     uint256 public rewardPerETHStored;
     // 每个用户质押 ETH 的数量
@@ -47,9 +45,8 @@ contract NFTMarketWithRewards {
         // 抽取 1% 的手续费
         uint256 fee = _order.price * 10 / 1000;
 
-        accumulatedFees += fee;
         if(totalStaked > 0) {
-            rewardPerETHStored = accumulatedFees * 1e18 / totalStaked;
+            rewardPerETHStored += fee * 1e18 / totalStaked;
         }
 
         emit FeesCollected(fee);
@@ -61,10 +58,6 @@ contract NFTMarketWithRewards {
     
     function _updateReward(address account) internal {
         require(account != address(0), "Invalid account");
-        // 更新每单位质押 ETH 的累积未领取奖励
-        if (totalStaked > 0) {
-            rewardPerETHStored = accumulatedFees * 1e18 / totalStaked;
-        }
         // 更新该用户待领取奖励
         userRewardToClaim[account] += userStakeAmount[account] * (rewardPerETHStored - userRewardPerETHPaid[account]) / 1e18;
         // 更新该用户的累积奖励率
