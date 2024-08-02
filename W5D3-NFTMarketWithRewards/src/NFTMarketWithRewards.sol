@@ -13,13 +13,13 @@ contract NFTMarketWithRewards {
     
     // 总的质押 ETH 的数量
     uint256 public totalStaked;
-    // 每单位质押 ETH 的累积未领取奖励
+    // 每单位质押 ETH 的累积奖励
     uint256 public rewardPerETHStored;
     // 每个用户质押 ETH 的数量
     mapping(address => uint256) public userStakeAmount;
     // 每个用户待领取的奖励
     mapping(address => uint256) public userRewardToClaim;
-    // 每个用户上次领取奖励时的 每单位质押 ETH 的累积未领取奖励
+    // 每个用户上次领取奖励时的 每单位质押 ETH 的累积奖励
     mapping(address => uint256) public userRewardPerETHPaid;
 
     function list(address _nftAddr, uint256 _tokenId, uint256 _price) public {
@@ -60,7 +60,7 @@ contract NFTMarketWithRewards {
         require(account != address(0), "Invalid account");
         // 更新该用户待领取奖励
         userRewardToClaim[account] += userStakeAmount[account] * (rewardPerETHStored - userRewardPerETHPaid[account]) / 1e18;
-        // 更新该用户的累积奖励率
+        // 更新该用户的累积奖励
         userRewardPerETHPaid[account] = rewardPerETHStored;
     }
 
