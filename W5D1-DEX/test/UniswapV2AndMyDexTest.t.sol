@@ -49,12 +49,12 @@ contract UniswapV2AndMyDexTest is Test {
         vm.startPrank(alice);
         rnt.approve(address(router), 1000 * 10**18);
         router.addLiquidityETH{value: 5 ether}(
-            address(rnt),
-            1000 * 10**18,
-            0,
-            0,
-            alice,
-            block.timestamp
+            address(rnt),          // address token,
+            1000 * 10**18,         // uint amountTokenDesired,
+            0,                     // uint amountTokenMin,
+            0,                     // uint amountETHMin,
+            alice,                 // address to,
+            block.timestamp        // uint deadline
         );
         vm.stopPrank();
 
@@ -69,12 +69,12 @@ contract UniswapV2AndMyDexTest is Test {
         vm.startPrank(alice);
         pair.approve(address(router), liquidity);
         router.removeLiquidityETH(
-            address(rnt),
-            liquidity,
-            0,
-            0,
-            alice,
-            block.timestamp
+            address(rnt),     // address tokenA,
+            liquidity,        // uint liquidity,
+            0,                // uint amountAMin,
+            0,                // uint amountBMin,
+            alice,            // address to,
+            block.timestamp   // uint deadline
         );
         vm.stopPrank();
 

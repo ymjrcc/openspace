@@ -40,11 +40,11 @@ contract MyDex is IMyDex {
         path[1] = buyToken;
 
         uint[] memory amounts = uniswapRouter.swapExactTokensForTokens(
-            msg.value,
-            minBuyAmount,
-            path,
-            msg.sender,
-            block.timestamp
+            msg.value,       // uint amountIn
+            minBuyAmount,  // uint amountOutMin
+            path,            // address[] calldata path
+            msg.sender,      // address to
+            block.timestamp  // uint deadline
         );
 
         emit ETHSold(msg.sender, buyToken, msg.value, amounts[1]);
@@ -61,11 +61,11 @@ contract MyDex is IMyDex {
         path[1] = address(WETH);
 
         uint[] memory amounts = uniswapRouter.swapExactTokensForTokens(
-            sellAmount,
-            minBuyAmount,
-            path,
-            address(this),
-            block.timestamp
+            sellAmount,    // uint amountIn
+            minBuyAmount,  // uint amountOutMin
+            path,            // address[] calldata path
+            address(this),   // address to
+            block.timestamp  // uint deadline
         );
 
         // 将获得的 WETH 转换回 ETH 并发送给用户
