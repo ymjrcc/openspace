@@ -10,17 +10,21 @@ contract NFTMarketWithRewards {
     }
     // NFTAddress => tokenId => Order
     mapping(address => mapping(uint256 => Order)) public nftList;
+
+    struct StakeInfo {
+        // 每个用户质押 ETH 的数量
+        uint128 amount;
+        // 每个用户待领取的奖励
+        uint128 reward;
+        // 每个用户上次领取奖励时的 每单位质押 ETH 的累积奖励
+        uint256 index;
+    }
+    mapping(address => StakeInfo) public stakes;
     
     // 总的质押 ETH 的数量
     uint256 public totalStaked;
     // 每单位质押 ETH 的累积奖励
-    uint256 public rewardPerETHStored;
-    // 每个用户质押 ETH 的数量
-    mapping(address => uint256) public userStakeAmount;
-    // 每个用户待领取的奖励
-    mapping(address => uint256) public userRewardToClaim;
-    // 每个用户上次领取奖励时的 每单位质押 ETH 的累积奖励
-    mapping(address => uint256) public userRewardPerETHPaid;
+    uint256 public poolIndex;
 
     function list(address _nftAddr, uint256 _tokenId, uint256 _price) public {
         IERC721 _nft = IERC721(_nftAddr);
@@ -46,7 +50,7 @@ contract NFTMarketWithRewards {
         uint256 fee = _order.price * 10 / 1000;
 
         if(totalStaked > 0) {
-            rewardPerETHStored += fee * 1e18 / totalStaked;
+            poolIndex += fee * 1e18 / totalStaked;
         }
 
         emit FeesCollected(fee);
@@ -58,23 +62,25 @@ contract NFTMarketWithRewards {
     
     function _updateReward(address account) internal {
         require(account != address(0), "Invalid account");
+        StakeInfo memory info = stakes[account];
         // 更新该用户待领取奖励
-        userRewardToClaim[account] += userStakeAmount[account] * (rewardPerETHStored - userRewardPerETHPaid[account]) / 1e18;
+        info.reward += uint128(uint256(info.amount) * (poolIndex - info.index) / 1e18);
         // 更新该用户的累积奖励
-        userRewardPerETHPaid[account] = rewardPerETHStored;
+        info.index = poolIndex;
+        stakes[account] = info;
     }
 
     function stake() public payable {
         _updateReward(msg.sender);
-        userStakeAmount[msg.sender] += msg.value;
+        stakes[msg.sender].amount += uint128(msg.value);
         totalStaked += msg.value;
         emit Staked(msg.sender, msg.value);
     }
 
-    function unstake(uint256 amount) public {
-        require(userStakeAmount[msg.sender] >= amount, "Insufficient staked amount");
+    function unstake(uint128 amount) public {
+        require(stakes[msg.sender].amount >= amount, "Insufficient staked amount");
         _updateReward(msg.sender);
-        userStakeAmount[msg.sender] -= amount;
+        stakes[msg.sender].amount -= amount;
         totalStaked -= amount;
         (bool success, ) = payable(msg.sender).call{value: amount}("");
         require(success, "Transfer failed");
@@ -83,9 +89,9 @@ contract NFTMarketWithRewards {
 
     function claimReward() public {
         _updateReward(msg.sender);
-        uint256 reward = userRewardToClaim[msg.sender];
+        uint256 reward = stakes[msg.sender].reward;
         require(reward > 0, "No rewards to claim");
-        userRewardToClaim[msg.sender] = 0;
+        stakes[msg.sender].reward = 0;
         (bool success, ) = payable(msg.sender).call{value: reward}("");
         require(success, "Transfer failed");
         emit RewardClaimed(msg.sender, reward);

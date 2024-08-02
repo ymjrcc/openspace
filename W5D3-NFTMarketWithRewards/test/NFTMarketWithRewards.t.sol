@@ -65,7 +65,8 @@ contract NFTMarketWithRewardsTest is Test {
         vm.prank(alice);
         market.stake{value: 1 ether}();
 
-        assertEq(market.userStakeAmount(alice), 1 ether);
+        (uint128 amount,,) = market.stakes(alice);
+        assertEq(amount, 1 ether);
         assertEq(market.totalStaked(), 1 ether);
     }
 
@@ -76,7 +77,8 @@ contract NFTMarketWithRewardsTest is Test {
         market.unstake(0.5 ether);
         vm.stopPrank();
 
-        assertEq(market.userStakeAmount(alice), 0.5 ether);
+        (uint128 amount,,) = market.stakes(alice);
+        assertEq(amount, 0.5 ether);
         assertEq(market.totalStaked(), 0.5 ether);
         assertEq(alice.balance, balanceBefore + 0.5 ether);
     }
@@ -102,7 +104,8 @@ contract NFTMarketWithRewardsTest is Test {
         market.claimReward();
 
         assertEq(alice.balance - balanceBefore, 0.01 ether);
-        assertEq(market.userRewardToClaim(alice), 0);
+        (, uint128 reward,) = market.stakes(alice);
+        assertEq(reward, 0);
     }
 
     function testMultipleStakersRewards() public {
@@ -133,8 +136,10 @@ contract NFTMarketWithRewardsTest is Test {
 
         assertGt(alice.balance, aliceBalanceBefore);
         assertGt(bob.balance, bobBalanceBefore);
-        assertEq(market.userRewardToClaim(alice), 0);
-        assertEq(market.userRewardToClaim(bob), 0);
+        (, uint128 reward1,) = market.stakes(alice);
+        (, uint128 reward2,) = market.stakes(alice);
+        assertEq(reward1, 0);
+        assertEq(reward2, 0);
         assertApproxEqAbs(alice.balance - aliceBalanceBefore, bob.balance - bobBalanceBefore, 1e9);
     }
 
@@ -154,108 +159,117 @@ contract NFTMarketWithRewardsTest is Test {
         vm.prank(alice);
         market.stake{value: 5 ether}();
         assertEq(market.totalStaked(), 5 ether);
-        assertEq(market.rewardPerETHStored(), 0);
-        assertEq(market.userStakeAmount(alice),  5 ether);
-        assertEq(market.userRewardToClaim(alice), 0);
-        assertEq(market.userRewardPerETHPaid(alice), 0);
+        assertEq(market.poolIndex(), 0);
+        (uint128 amount1, uint128 reward1, uint256 index1) = market.stakes(alice);
+        assertEq(amount1,  5 ether);
+        assertEq(reward1, 0);
+        assertEq(index1, 0);
 
         // add fees
         console.log("2. Fee = 20 ETH");
         generateFees(20 ether);
         assertEq(market.totalStaked(), 5 ether);
-        assertEq(market.rewardPerETHStored(), 4 ether);
+        assertEq(market.poolIndex(), 4 ether);
 
         // bob stakes 5 ETH
         console.log("3. Bob stakes 5 ETH");
         vm.prank(bob);
         market.stake{value: 5 ether}();
         assertEq(market.totalStaked(), 10 ether);
-        assertEq(market.rewardPerETHStored(), 4 ether); // 20 / 10
-        assertEq(market.userStakeAmount(bob),  5 ether);
-        assertEq(market.userRewardToClaim(bob), 0);
-        assertEq(market.userRewardPerETHPaid(bob), 4 ether);
+        assertEq(market.poolIndex(), 4 ether);
+        (uint128 amount2, uint128 reward2, uint256 index2) = market.stakes(bob);
+        assertEq(amount2,  5 ether);
+        assertEq(reward2, 0);
+        assertEq(index2, 4 ether);
 
         // add more fees
         console.log("4. Fee = 20 + 10 = 30 ETH");
         generateFees(10 ether);
         assertEq(market.totalStaked(), 10 ether);
-        assertEq(market.rewardPerETHStored(), 5 ether);
+        assertEq(market.poolIndex(), 5 ether);
 
         // charlie stakes 10 ETH
         console.log("5. Charlie stakes 10 ETH");
         vm.prank(charlie);
         market.stake{value: 10 ether}();
-        assertEq(market.userStakeAmount(charlie),  10 ether);
-        assertEq(market.userRewardToClaim(charlie), 0);
-        assertEq(market.userRewardPerETHPaid(charlie), 5 ether);
+        (uint128 amount3, uint128 reward3, uint256 index3) = market.stakes(charlie);
+        assertEq(amount3,  10 ether);
+        assertEq(reward3, 0);
+        assertEq(index3, 5 ether);
 
         // add more fees
         console.log("6. Fee = 30 + 10 = 40 ETH");
         generateFees(10 ether);
         assertEq(market.totalStaked(), 20 ether);
-        assertEq(market.rewardPerETHStored(), 5.5 ether);
+        assertEq(market.poolIndex(), 5.5 ether);
 
         // alice unstakes 5 ETH
         console.log("7. Alice unstakes 5 ETH");
         uint256 aliceBalanceBefore = alice.balance;
         vm.prank(alice);
         market.unstake(5 ether);
-        assertEq(market.userStakeAmount(alice),  0 ether);
+        (uint128 amount4,,) = market.stakes(alice);
+        assertEq(amount4,  0 ether);
         assertEq(market.totalStaked(), 15 ether);
         assertEq(alice.balance - aliceBalanceBefore, 5 ether);
 
         // add more fees
-        console.log("6. Fee = 40 + 15 = 55 ETH");
+        console.log("8. Fee = 40 + 15 = 55 ETH");
         generateFees(15 ether);
         assertEq(market.totalStaked(), 15 ether);
-        assertEq(market.rewardPerETHStored(), 6.5 ether);
+        assertEq(market.poolIndex(), 6.5 ether);
 
         // Charlie claims reward
-        console.log("7. Charlie claims reward = 15 ETH");
+        console.log("9. Charlie claims reward = 15 ETH");
         uint256 charlieBalanceBefore = charlie.balance;
         vm.prank(charlie);
         market.claimReward();
-        assertEq(market.userRewardToClaim(charlie), 0);
+        (, uint128 reward5, ) = market.stakes(charlie);
+        assertEq(reward5, 0);
         assertEq(charlie.balance - charlieBalanceBefore, 15 ether);
 
         // Bob claims reward
-        console.log("8. Bob claims reward = 12.5 ETH");
+        console.log("10. Bob claims reward = 12.5 ETH");
         uint256 bobBalanceBefore = bob.balance;
         vm.prank(bob);
         market.claimReward();
-        assertEq(market.userRewardToClaim(bob), 0);
+        (, uint128 reward6, ) = market.stakes(bob);
+        assertEq(reward6, 0);
         assertEq(bob.balance - bobBalanceBefore, 12.5 ether);
 
         // Alice claims reward
-        console.log("9. Alice claims reward = 27.5 ETH");
+        console.log("11. Alice claims reward = 27.5 ETH");
         uint256 aliceBalanceBefore2 = alice.balance;
         vm.prank(alice);
         market.claimReward();
-        assertEq(market.userRewardToClaim(alice), 0);
+        (, uint128 reward7, ) = market.stakes(alice);
+        assertEq(reward7, 0);
         assertEq(alice.balance - aliceBalanceBefore2, 27.5 ether);
 
         // Alice stakes 5 ETH
-        console.log("10. Alice stakes 5 ETH");
+        console.log("12. Alice stakes 5 ETH");
         vm.prank(alice);
         market.stake{value: 5 ether}();
         assertEq(market.totalStaked(), 20 ether);
-        assertEq(market.rewardPerETHStored(), 6.5 ether);
-        assertEq(market.userStakeAmount(alice),  5 ether);
-        assertEq(market.userRewardToClaim(alice), 0);
-        assertEq(market.userRewardPerETHPaid(alice), 6.5 ether);
+        assertEq(market.poolIndex(), 6.5 ether);
+        (uint128 amount8, uint128 reward8, uint256 index8) = market.stakes(alice);
+        assertEq(amount8,  5 ether);
+        assertEq(reward8, 0);
+        assertEq(index8, 6.5 ether);
 
         // add fees
-        console.log("11. Fee = 20 ETH");
+        console.log("13. Fee = 20 ETH");
         generateFees(20 ether);
         assertEq(market.totalStaked(), 20 ether);
-        assertEq(market.rewardPerETHStored(), 7.5 ether);
+        assertEq(market.poolIndex(), 7.5 ether);
 
         // Alice claims reward
-        console.log("12. Alice claims reward = 20 ETH");
+        console.log("14. Alice claims reward = 20 ETH");
         uint256 aliceBalanceBefore3 = alice.balance;
         vm.prank(alice);
         market.claimReward();
-        assertEq(market.userRewardToClaim(alice), 0);
+        (, uint128 reward9, ) = market.stakes(alice);
+        assertEq(reward9, 0);
         assertEq(alice.balance - aliceBalanceBefore3, 5 ether);
     }
 }
